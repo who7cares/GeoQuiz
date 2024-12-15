@@ -55,16 +55,18 @@ class MainActivity : AppCompatActivity() {
 
 
         trueButton.setOnClickListener {
-            val chek = chekAnswer(true)
-            buttonUpdate(chek, trueButton)
+            val buttonColor = chekAnswer(true)
+            buttonState[currentIndex].trueButtonColor = buttonColor
+            trueButton.backgroundTintList = ContextCompat.getColorStateList(this, buttonColor)
             lastQuestion()
 
         }
 
         // сообщение о неверном ответе
         falseButton.setOnClickListener {
-            val chek = chekAnswer(false)
-            buttonUpdate(chek, falseButton)
+            val buttonColor = chekAnswer(false)
+            buttonState[currentIndex].falseButtonColor = buttonColor
+            falseButton.backgroundTintList = ContextCompat.getColorStateList(this, buttonColor)
             lastQuestion()
         }
 
@@ -79,9 +81,9 @@ class MainActivity : AppCompatActivity() {
         }
 
 
-
         reStart.setOnClickListener {
             reStartQuizz()
+            updateQuestion()
         }
 
         updateQuestion()
@@ -92,6 +94,7 @@ class MainActivity : AppCompatActivity() {
         // устанавливаем цвет кнопок
         val currentTrueButtonColor = buttonState[currentIndex].trueButtonColor
         val currentFalseButtonColor = buttonState[currentIndex].falseButtonColor
+
         trueButton.backgroundTintList =
             ContextCompat.getColorStateList(this, currentTrueButtonColor)
         falseButton.backgroundTintList =
@@ -107,48 +110,39 @@ class MainActivity : AppCompatActivity() {
         numberOfQuestionTextView.setText("№ вопроса: ${currentIndex + 1}")
     }
 
-    private fun chekAnswer(userAnswer: Boolean): Boolean {
+    private fun chekAnswer(userAnswer: Boolean): Int {
 
         var messageResId: Int // текст для тоста
         val correctAnswer = questionBank[currentIndex].answer
+        val buttonColor: Int
 
         if (userAnswer == correctAnswer) {
             messageResId = R.string.correct_toast
             userCorrectAnswer++
+            buttonColor = R.color.correctAnswer
         } else {
             messageResId = R.string.wrong_toast
+            buttonColor = R.color.wrongAnswer
         }
 
+        // вывводим тост
         val toast = Toast.makeText(
             this,
             messageResId,
             Toast.LENGTH_SHORT
         )
-
         toast.setGravity(Gravity.TOP, 0, 250)
         toast.show()
 
-        return if (messageResId == R.string.correct_toast) true else false
-    }
-
-    fun buttonUpdate(answer: Boolean, buttonType: Button) {
         // блокируем кнопки после ответа
         buttonState[currentIndex].buttonState = false
 
         trueButton.isEnabled = buttonState[currentIndex].buttonState
         falseButton.isEnabled = buttonState[currentIndex].buttonState
 
-        // обновляем цвет кнопки и сохраняем значение в buttonState
-        val colorRes = if (answer) R.color.correctAnswer else R.color.wrongAnswer
-        buttonType.backgroundTintList = ContextCompat.getColorStateList(this, colorRes)
-
-        if (buttonType.id == R.id.true_button) {
-            buttonState[currentIndex].trueButtonColor = colorRes
-        } else {
-            buttonState[currentIndex].falseButtonColor = colorRes
-        }
-
+        return buttonColor
     }
+
 
     fun lastQuestion() {
         for (i in 0 until buttonState.size - 1) {
@@ -170,15 +164,5 @@ class MainActivity : AppCompatActivity() {
         reStart.visibility = View.INVISIBLE
         scoreText.visibility = View.INVISIBLE
 
-        val questionTextResId = questionBank[currentIndex].textResId
-        questionTextView.setText(questionTextResId)
-        numberOfQuestionTextView.setText("№ вопроса: 1")
-
-        val currentTrueButtonColor = buttonState[currentIndex].trueButtonColor
-        val currentFalseButtonColor = buttonState[currentIndex].falseButtonColor
-        trueButton.backgroundTintList =
-            ContextCompat.getColorStateList(this, currentTrueButtonColor)
-        falseButton.backgroundTintList =
-            ContextCompat.getColorStateList(this, currentFalseButtonColor)
     }
 }
