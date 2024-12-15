@@ -90,7 +90,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateQuestion() {
-
         // устанавливаем цвет кнопок
         val currentTrueButtonColor = buttonState[currentIndex].trueButtonColor
         val currentFalseButtonColor = buttonState[currentIndex].falseButtonColor
@@ -110,8 +109,9 @@ class MainActivity : AppCompatActivity() {
         numberOfQuestionTextView.setText("№ вопроса: ${currentIndex + 1}")
     }
 
-    private fun chekAnswer(userAnswer: Boolean): Int {
 
+
+    private fun chekAnswer(userAnswer: Boolean): Int {
         var messageResId: Int // текст для тоста
         val correctAnswer = questionBank[currentIndex].answer
         val buttonColor: Int
@@ -144,6 +144,7 @@ class MainActivity : AppCompatActivity() {
     }
 
 
+
     fun lastQuestion() {
         for (i in 0 until buttonState.size - 1) {
             if (buttonState[i].buttonState) return
@@ -152,6 +153,7 @@ class MainActivity : AppCompatActivity() {
         scoreText.setText("Количество верных ответов: $userCorrectAnswer / ${questionBank.size}")
         scoreText.visibility = View.VISIBLE
     }
+
 
     fun reStartQuizz() {
         buttonState = ButtonState.addButton(questionBank.size)
