@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">GeoQiz</string>
+    <string name="correct_toast">Верно!</string>
+    <string name="wrong_toast">Чушь!</string>
+
+    <string name="question_australia">Лондон - столица Австралии</string>
+    <string name="question_kama">Кама впадает в Волгу</string>
+    <string name="question_moon">Луна - спутник Земли</string>
+    <string name="question_izhevsk">В Ижевске живет Путин</string>
+    <string name="question_dublin">Дублин - это порода собак</string>
+
+
+</resources>
