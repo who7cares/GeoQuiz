@@ -1,87 +1,74 @@
 package com.bignerdranch.geoqiz
 
 import android.os.Bundle
-import android.view.Gravity
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 
-import android.widget.Button
-import android.widget.ImageView
-import android.widget.TextView
 import android.widget.Toast
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.ViewModelProviders
+import com.bignerdranch.geoqiz.databinding.ActivityMainBinding
+
+private const val TAG = "мы внутри мейн"
 
 class MainActivity : AppCompatActivity() {
-    private lateinit var trueButton: Button
-    private lateinit var falseButton: Button
 
-    private lateinit var questionTextView: TextView
-    private lateinit var numberOfQuestionTextView: TextView
-    private lateinit var scoreText: TextView
+    private lateinit var binding: ActivityMainBinding
 
-
-    private lateinit var nextButton: ImageView
-    private lateinit var previousButton: ImageView
-    private lateinit var reStart: ImageView
-
-
-    private val questionBank: List<Question> = listOf(
-        Question(R.string.question_australia, false),
-        Question(R.string.question_kama, true),
-        Question(R.string.question_moon, true),
-        Question(R.string.question_izhevsk, false),
-        Question(R.string.question_dublin, false)
-    )
-
-    // Добавляем кнопки. Количество кнопок = количеству вопросов
-    private var buttonState = ButtonState.addButton(questionBank.size)
-    private var currentIndex = 0
-    private var userCorrectAnswer = 0
+    private lateinit var quizViewModel: QuizViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-
-        trueButton = findViewById(R.id.true_button)
-        falseButton = findViewById(R.id.false_button)
-
-        questionTextView = findViewById(R.id.question_text_view)
-        numberOfQuestionTextView = findViewById(R.id.question_number)
-        scoreText = findViewById(R.id.score_text)
-
-        nextButton = findViewById(R.id.right_arrow)
-        previousButton = findViewById(R.id.left_arrow)
-        reStart = findViewById(R.id.reStart)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
 
-        trueButton.setOnClickListener {
+        val provider: ViewModelProvider = ViewModelProviders.of(this)
+        quizViewModel = provider.get(QuizViewModel::class.java)
+
+
+        if (quizViewModel.buttonState.isEmpty()) {
+            quizViewModel.makeButtonsState(quizViewModel.questionBankSize)
+        }
+
+
+
+//        scoreText = findViewById(R.id.score_text)
+        binding.scoreText.text = quizViewModel.scoreText
+
+        binding.reStart.visibility = if (quizViewModel.isReStartVisible) View.VISIBLE else View.INVISIBLE
+        binding.scoreText.visibility = if (quizViewModel.isScoreVisible) View.VISIBLE else View.INVISIBLE
+
+
+        binding.trueButton.setOnClickListener {
             val buttonColor = chekAnswer(true)
-            buttonState[currentIndex].trueButtonColor = buttonColor
-            trueButton.backgroundTintList = ContextCompat.getColorStateList(this, buttonColor)
+            quizViewModel.buttonState[quizViewModel.currentIndex].trueButtonColor = buttonColor
+            binding.trueButton.backgroundTintList = ContextCompat.getColorStateList(this, buttonColor)
             lastQuestion()
 
         }
 
         // сообщение о неверном ответе
-        falseButton.setOnClickListener {
+        binding.falseButton.setOnClickListener {
             val buttonColor = chekAnswer(false)
-            buttonState[currentIndex].falseButtonColor = buttonColor
-            falseButton.backgroundTintList = ContextCompat.getColorStateList(this, buttonColor)
+            quizViewModel.buttonState[quizViewModel.currentIndex].falseButtonColor = buttonColor
+            binding.falseButton.backgroundTintList = ContextCompat.getColorStateList(this, buttonColor)
             lastQuestion()
         }
 
-        nextButton.setOnClickListener {
-            currentIndex = (currentIndex + 1) % questionBank.size
+        binding.rightArrow.setOnClickListener {
+            quizViewModel.moveToNext()
             updateQuestion()
         }
 
-        previousButton.setOnClickListener {
-            currentIndex = (currentIndex - 1 + questionBank.size) % questionBank.size
+        binding.leftArrow.setOnClickListener {
+            quizViewModel.moveToPrev()
             updateQuestion()
         }
 
 
-        reStart.setOnClickListener {
+        binding.reStart.setOnClickListener {
             reStartQuizz()
             updateQuestion()
         }
@@ -91,34 +78,33 @@ class MainActivity : AppCompatActivity() {
 
     private fun updateQuestion() {
         // устанавливаем цвет кнопок
-        val currentTrueButtonColor = buttonState[currentIndex].trueButtonColor
-        val currentFalseButtonColor = buttonState[currentIndex].falseButtonColor
+        val currentTrueButtonColor = quizViewModel.buttonState[quizViewModel.currentIndex].trueButtonColor
+        val currentFalseButtonColor = quizViewModel.buttonState[quizViewModel.currentIndex].falseButtonColor
 
-        trueButton.backgroundTintList =
+        binding.trueButton.backgroundTintList =
             ContextCompat.getColorStateList(this, currentTrueButtonColor)
-        falseButton.backgroundTintList =
+        binding.falseButton.backgroundTintList =
             ContextCompat.getColorStateList(this, currentFalseButtonColor)
 
         // устанавливаем активность кнопки для нового вопроса
-        trueButton.isEnabled = buttonState[currentIndex].buttonState
-        falseButton.isEnabled = buttonState[currentIndex].buttonState
+        binding.trueButton.isEnabled = quizViewModel.buttonState[quizViewModel.currentIndex].clicable
+        binding.falseButton.isEnabled = quizViewModel.buttonState[quizViewModel.currentIndex].clicable
 
         // устанавливаем вопрос
-        val questionTextResId = questionBank[currentIndex].textResId
-        questionTextView.setText(questionTextResId)
-        numberOfQuestionTextView.setText("№ вопроса: ${currentIndex + 1}")
+        val questionTextResId = quizViewModel.currentQuestionText
+        binding.questionTextView.setText(questionTextResId)
+        binding.questionNumber.setText("№ вопроса: ${quizViewModel.currentIndex + 1}")
     }
-
 
 
     private fun chekAnswer(userAnswer: Boolean): Int {
         var messageResId: Int // текст для тоста
-        val correctAnswer = questionBank[currentIndex].answer
+        val correctAnswer = quizViewModel.currentQuestionAnswer
         val buttonColor: Int
 
         if (userAnswer == correctAnswer) {
             messageResId = R.string.correct_toast
-            userCorrectAnswer++
+            quizViewModel.userCorrectAnswer ++
             buttonColor = R.color.correctAnswer
         } else {
             messageResId = R.string.wrong_toast
@@ -126,19 +112,17 @@ class MainActivity : AppCompatActivity() {
         }
 
         // вывводим тост
-        val toast = Toast.makeText(
+        Toast.makeText(
             this,
             messageResId,
             Toast.LENGTH_SHORT
-        )
-        toast.setGravity(Gravity.TOP, 0, 250)
-        toast.show()
+        ).show()
 
         // блокируем кнопки после ответа
-        buttonState[currentIndex].buttonState = false
+        quizViewModel.buttonState[quizViewModel.currentIndex].clicable = false
 
-        trueButton.isEnabled = buttonState[currentIndex].buttonState
-        falseButton.isEnabled = buttonState[currentIndex].buttonState
+        binding.trueButton.isEnabled = quizViewModel.buttonState[quizViewModel.currentIndex].clicable
+        binding.falseButton.isEnabled = quizViewModel.buttonState[quizViewModel.currentIndex].clicable
 
         return buttonColor
     }
@@ -146,25 +130,35 @@ class MainActivity : AppCompatActivity() {
 
 
     fun lastQuestion() {
-        for (i in 0 until buttonState.size - 1) {
-            if (buttonState[i].buttonState) return
+        if (quizViewModel.buttonState.all { !it.clicable }) {
+
+            quizViewModel.isScoreVisible = true
+            quizViewModel.isReStartVisible = true
+
+            // Обновляем интерфейс
+            quizViewModel.scoreText = "Количество верных ответов: ${quizViewModel.userCorrectAnswer} / ${quizViewModel.questionBankSize}"
+            binding.scoreText.text = quizViewModel.scoreText
+            updateVisibility()
         }
-        reStart.visibility = View.VISIBLE
-        scoreText.setText("Количество верных ответов: $userCorrectAnswer / ${questionBank.size}")
-        scoreText.visibility = View.VISIBLE
+
     }
 
 
     fun reStartQuizz() {
-        buttonState = ButtonState.addButton(questionBank.size)
+        quizViewModel.makeButtonsState(quizViewModel.questionBankSize)
 
-        trueButton.isEnabled = buttonState[currentIndex].buttonState
-        falseButton.isEnabled = buttonState[currentIndex].buttonState
+        binding.trueButton.isEnabled = quizViewModel.buttonState[quizViewModel.currentIndex].clicable
+        binding.falseButton.isEnabled = quizViewModel.buttonState[quizViewModel.currentIndex].clicable
 
-        userCorrectAnswer = 0
-        currentIndex = 0
-        reStart.visibility = View.INVISIBLE
-        scoreText.visibility = View.INVISIBLE
+        quizViewModel.userCorrectAnswer = 0
+        quizViewModel.currentIndex = 0
+        quizViewModel.isScoreVisible = false
+        quizViewModel.isReStartVisible = false
+        updateVisibility()
+    }
 
+    private fun updateVisibility() {
+        binding.scoreText.visibility = if (quizViewModel.isScoreVisible) View.VISIBLE else View.INVISIBLE
+        binding.reStart.visibility = if (quizViewModel.isReStartVisible) View.VISIBLE else View.INVISIBLE
     }
 }
