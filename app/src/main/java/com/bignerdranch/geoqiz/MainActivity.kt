@@ -16,7 +16,9 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
 
-    private lateinit var quizViewModel: QuizViewModel
+    private val quizViewModel: QuizViewModel by lazy {
+        ViewModelProviders.of(this).get(QuizViewModel::class.java)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -24,8 +26,6 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
 
-        val provider: ViewModelProvider = ViewModelProviders.of(this)
-        quizViewModel = provider.get(QuizViewModel::class.java)
 
 
         if (quizViewModel.buttonState.isEmpty()) {
@@ -33,8 +33,6 @@ class MainActivity : AppCompatActivity() {
         }
 
 
-
-//        scoreText = findViewById(R.id.score_text)
         binding.scoreText.text = quizViewModel.scoreText
 
         binding.reStart.visibility = if (quizViewModel.isReStartVisible) View.VISIBLE else View.INVISIBLE

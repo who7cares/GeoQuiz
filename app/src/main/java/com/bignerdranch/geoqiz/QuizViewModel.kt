@@ -5,7 +5,7 @@ import androidx.lifecycle.ViewModel
 
 private const val TAG = "QizViewModel"
 
-class QuizViewModel: ViewModel() {
+class QuizViewModel : ViewModel() {
 
 //    init {
 //        Log.d(TAG, "Создан экземмпляр QizViewModel")
@@ -55,7 +55,6 @@ class QuizViewModel: ViewModel() {
     fun makeButtonsState(questionBankSize: Int) {
 
         buttonState = MutableList(questionBankSize) { ButtonState() }
-}
-
+    }
 }
 
